@@ -1,5 +1,6 @@
 package pg.hib;
 
+import org.ehcache.config.builders.*;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +102,27 @@ public class Main {
         Cache<String, String> cache = cacheManager.createCache("simpleCache", config);
         cache.put("key1", "value1");
         cache.put("key2", "value2");
+        cacheManager.close();
+    }
+
+    private void ehcache3() {
+        org.ehcache.CacheManager cacheManager = CacheManagerBuilder.newCacheManagerBuilder()
+                .withCache("preConfigured",
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(Long.class, String.class, ResourcePoolsBuilder.heap(10)))
+                .build();
+        cacheManager.init();
+
+        org.ehcache.Cache<Long, String> preConfigured =
+                cacheManager.getCache("preConfigured", Long.class, String.class);
+
+        org.ehcache.Cache<Long, String> myCache = cacheManager.createCache("myCache",
+                CacheConfigurationBuilder.newCacheConfigurationBuilder(Long.class, String.class, ResourcePoolsBuilder.heap(10)));
+
+        myCache.put(1L, "da one!");
+        String value = myCache.get(1L);
+
+        cacheManager.removeCache("preConfigured");
+
         cacheManager.close();
     }
 
